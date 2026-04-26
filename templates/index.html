@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InvestiQ — AI Investigation Suite</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark"></span>
+        <span class="logo-text">InvestiQ</span>
+        <span class="logo-tag">AI Investigation Suite</span>
+      </div>
+      <nav class="header-nav">
+        <span class="nav-badge">Powered by Groq</span>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-label">Pharmaceutical &amp; General Document Analysis</p>
+      <h1 class="hero-title">From Report to<br/><em>Root Cause</em> in seconds.</h1>
+      <p class="hero-sub">Upload any investigation or deviation report. InvestiQ reads it, reasons through it, and delivers a structured analysis — ready for review.</p>
+    </div>
+    <div class="hero-grid-bg"></div>
+  </section>
+
+  <!-- ── Upload Panel ───────────────────────────────────────────────────── -->
+  <main class="main-content">
+    <section class="upload-section" id="uploadSection">
+      <div class="upload-card" id="dropZone">
+        <div class="upload-icon-wrap">
+          <svg class="upload-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="6" width="24" height="32" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M32 6l8 8" stroke="currentColor" stroke-width="2"/>
+            <rect x="32" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+            <path d="M16 22h16M16 28h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M36 32v12M30 38l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="upload-title">Drop your PDF here</h2>
+        <p class="upload-hint">or click to browse — max 20 MB</p>
+        <input type="file" id="fileInput" accept=".pdf" hidden />
+        <button class="btn-upload" id="browseBtn">Select PDF File</button>
+        <div class="file-info" id="fileInfo" hidden>
+          <span class="file-chip" id="fileName"></span>
+          <button class="btn-clear" id="clearBtn" title="Remove">&#x2715;</button>
+        </div>
+      </div>
+
+      <button class="btn-analyze" id="analyzeBtn" disabled>
+        <span class="btn-label">Generate Investigation Report</span>
+        <span class="btn-arrow">&#x2192;</span>
+      </button>
+    </section>
+
+    <!-- ── Loader ──────────────────────────────────────────────────────── -->
+    <div class="loader-overlay" id="loader" hidden>
+      <div class="loader-box">
+        <div class="spinner">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <p class="loader-text" id="loaderText">Extracting document content...</p>
+        <div class="loader-steps" id="loaderSteps">
+          <div class="step active" data-step="1">Reading PDF</div>
+          <div class="step" data-step="2">Reasoning with Groq</div>
+          <div class="step" data-step="3">Structuring Report</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ── Report Output ───────────────────────────────────────────────── -->
+    <section class="report-section" id="reportSection" hidden>
+      <div class="report-header">
+        <div>
+          <h2 class="report-title" id="reportTitle">Investigation Report</h2>
+          <p class="report-meta" id="reportMeta"></p>
+        </div>
+        <div class="report-actions">
+          <button class="btn-secondary" id="downloadBtn">Download Report</button>
+          <button class="btn-secondary" id="newReportBtn">New Analysis</button>
+        </div>
+      </div>
+
+      <div class="report-grid">
+
+        <!-- Problem Summary -->
+        <div class="report-card card-problem reveal" data-index="0">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">01</span>
+            <h3 class="card-title">Problem Summary</h3>
+          </div>
+          <p class="card-headline" id="problemHeadline"></p>
+          <p class="card-body" id="problemDetails"></p>
+        </div>
+
+        <!-- Root Cause Analysis -->
+        <div class="report-card card-rca reveal" data-index="1">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">02</span>
+            <h3 class="card-title">Root Cause Analysis</h3>
+          </div>
+          <div class="rca-primary">
+            <span class="tag">Primary Cause</span>
+            <p id="rcaPrimary"></p>
+          </div>
+          <div class="rca-factors">
+            <span class="tag">Contributing Factors</span>
+            <ul id="rcaFactors"></ul>
+          </div>
+          <p class="card-body" id="rcaNarrative"></p>
+        </div>
+
+        <!-- Impact Assessment -->
+        <div class="report-card card-impact reveal" data-index="2">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">03</span>
+            <h3 class="card-title">Impact Assessment</h3>
+          </div>
+          <div class="severity-row">
+            <span class="tag">Severity</span>
+            <span class="severity-badge" id="severityBadge"></span>
+          </div>
+          <div class="impact-grid">
+            <div class="impact-block">
+              <span class="impact-label">Patient Safety</span>
+              <p id="patientRisk"></p>
+            </div>
+            <div class="impact-block">
+              <span class="impact-label">Regulatory Risk</span>
+              <p id="regulatoryRisk"></p>
+            </div>
+            <div class="impact-block">
+              <span class="impact-label">Financial Risk</span>
+              <p id="financialRisk"></p>
+            </div>
+            <div class="impact-block">
+              <span class="impact-label">Affected Areas</span>
+              <div id="affectedAreas" class="tag-row"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Corrective Actions -->
+        <div class="report-card card-corrective reveal" data-index="3">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">04</span>
+            <h3 class="card-title">Corrective Actions</h3>
+          </div>
+          <div class="action-list" id="correctiveActions"></div>
+        </div>
+
+        <!-- Preventive Actions -->
+        <div class="report-card card-preventive reveal" data-index="4">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">05</span>
+            <h3 class="card-title">Preventive Actions</h3>
+          </div>
+          <div class="action-list" id="preventiveActions"></div>
+        </div>
+
+        <!-- Conclusion -->
+        <div class="report-card card-conclusion reveal" data-index="5">
+          <div class="card-header">
+            <div class="card-accent"></div>
+            <span class="card-label">06</span>
+            <h3 class="card-title">Conclusion &amp; Next Steps</h3>
+          </div>
+          <p class="card-body conclusion-text" id="conclusionText"></p>
+        </div>
+
+      </div><!-- /report-grid -->
+    </section>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>InvestiQ &mdash; AI Investigation Suite &nbsp;|&nbsp; Built for demonstration purposes</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
